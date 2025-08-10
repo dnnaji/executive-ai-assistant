@@ -158,7 +158,9 @@ cython_debug/
 # Artifacts from running LangGraph Server locally
 .langgraph_api/
 
-# Secrets for Google Workspace (Gmail, GCal)
+# Secrets (legacy Python setup)
+eaia/
+scripts/
 .secrets/
 
 # Node.js

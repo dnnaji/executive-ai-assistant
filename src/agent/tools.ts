@@ -46,23 +46,7 @@ export function toolSchemasForLLM(): ToolSchema[] {
   });
 }
 
-// Example tools
-const WebSearchArgs = z.object({ query: z.string().min(1) });
-registerTool({
-  name: "web_search",
-  description: "Search the web for information (stub).",
-  schema: WebSearchArgs,
-  execute: async (args) => {
-    const { query } = WebSearchArgs.parse(args);
-    return {
-      summary: `searched web for: ${query}`,
-      result: [
-        { title: "Result A", url: "https://example.com" },
-        { title: "Result B", url: "https://example.org" },
-      ],
-    };
-  },
-});
+// Tools
 
 const CalculatorArgs = z.object({ expression: z.string().min(1) });
 registerTool({
