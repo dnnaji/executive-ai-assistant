@@ -114,6 +114,10 @@ rm -f .python-version
 
 Notes:
 - If removing tool orchestration entirely, also remove `zod-to-json-schema` and related tool-schema plumbing to reduce dependencies.
+- Preserve terminal Markdown rendering and code highlighting:
+  - Keep `marked` + `marked-terminal` and the width-aware renderer in `src/markdown/render.ts`.
+  - Do not reintroduce `ink-markdown` or `terminal-markdown`.
+  - Keep optional `cli-highlight` usage for fenced code blocks.
 
 ### 3.2 Streamline Architecture
 ```
@@ -143,6 +147,7 @@ bun add ai @ai-sdk/openai @ai-sdk/anthropic
 bun remove openai  # Replace with AI SDK
 bun add marked marked-terminal  # Align with current markdown renderer
 bun remove ink-markdown terminal-markdown  # No longer needed
+bun add cli-highlight  # Optional ANSI code highlighting in terminal
 ```
 
 ### 4.2 Create Provider Abstraction
@@ -229,6 +234,8 @@ async function main() {
 main().catch(console.error);
 ```
 
+No changes required to Markdown renderer. Ensure any refactors continue to call `renderMarkdownToAnsi(answer, cols)` from `src/markdown/render.ts`.
+
 ### 4.5 Preflight and Fallbacks
 - If neither `OPENAI_API_KEY` is set nor the `ai` CLI is available, print a clear error and exit non-zero.
 - Prefer `OPENAI_API_KEY` presence to select Vercel AI SDK; otherwise use CLI provider.
@@ -286,6 +293,7 @@ export const logger = {
     "ink-text-input": "^6.0.0",
     "marked": "^16.1.2",
     "marked-terminal": "^7.3.0",
+    "cli-highlight": "^2.1.11",
     "mathjs": "^13.0.0",
     "react": "^19.1.1",
     "zod": "^3.23.8"
@@ -336,7 +344,7 @@ test('basic chat functionality', async () => {
 
 Additional tests:
 - Calculator rejects unsafe expressions and computes basic arithmetic.
-- Markdown renderer returns non-empty ANSI for sample Markdown.
+- Markdown renderer returns non-empty ANSI for sample Markdown and preserves fenced code blocks with highlighting when available.
 - CLI fallback works when `OPENAI_API_KEY` is not set and `ai` CLI is available.
 
 ### 7.2 Integration Tests

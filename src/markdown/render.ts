@@ -41,14 +41,20 @@ export async function renderMarkdownToAnsi(markdown: string, width?: number): Pr
     // highlighting optional
   }
 
-  // Configure the terminal renderer options - pass chalk instance for v7+ compatibility
+  // Configure the terminal renderer options with custom styling functions
   const terminalOptions: any = {
-    chalk: chalkForced,
     reflowText: true,
     width: typeof width === "number" ? width : undefined,
     unescape: true,
     emoji: true,
     showSectionPrefix: false,
+    // Override default styling with our forced chalk instance
+    strong: (text: string) => chalkForced.bold(text),
+    em: (text: string) => chalkForced.italic(text),
+    codespan: (text: string) => chalkForced.yellow(text),
+    del: (text: string) => chalkForced.strikethrough(text),
+    link: (text: string) => chalkForced.blue(text),
+    heading: (text: string) => chalkForced.green.bold(text),
   };
 
   // Add highlight function if available
