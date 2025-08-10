@@ -1,9 +1,16 @@
 import { AgentRunner } from "./agent/core";
+import React from "react";
+import { render } from "ink";
+import App from "./tui/App.js";
 
 async function main() {
-  const goal = process.argv.slice(2).join(" ") || "Find the square of 23+19 using the calculator, then summarize.";
+  const arg = process.argv.slice(2).join(" ");
+  if (!arg) {
+    render(React.createElement(App));
+    return; // TUI takes over
+  }
   const agent = new AgentRunner();
-  const answer = await agent.run(goal);
+  const answer = await agent.run(arg);
   console.log("\nFinal Answer:\n", answer);
 }
 

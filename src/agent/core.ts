@@ -1,13 +1,14 @@
 import type { ChatMessage, ToolResult } from "./types";
 import { LLM } from "./llm";
+import { CliLLM } from "./llm_cli";
 import { TOOLS, toolSchemasForLLM } from "./tools";
 
 export class AgentRunner {
-  private llm: LLM;
+  private llm: { chat: (messages: ChatMessage[], tools?: any[]) => Promise<any> };
   private maxSteps: number;
 
-  constructor(opts?: { llm?: LLM; maxSteps?: number }) {
-    this.llm = opts?.llm ?? new LLM();
+  constructor(opts?: { llm?: LLM | CliLLM; maxSteps?: number }) {
+    this.llm = opts?.llm ?? new CliLLM();
     this.maxSteps = opts?.maxSteps ?? 8;
   }
 
