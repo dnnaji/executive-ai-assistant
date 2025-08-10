@@ -1,8 +1,8 @@
 import { AgentRunner } from "./agent/core";
 import React from "react";
 import { render } from "ink";
-import App from "./tui/App.js";
-import { renderMarkdownToAnsi } from "./markdown/render.js";
+import App from "./tui/App";
+import { renderMarkdownToAnsi } from "./markdown/render";
 
 async function main() {
   const arg = process.argv.slice(2).join(" ");

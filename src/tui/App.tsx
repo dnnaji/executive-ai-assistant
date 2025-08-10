@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Box, Text, useApp, useInput } from "ink";
-import { renderMarkdownToAnsi } from "@/markdown/render";
+import { renderMarkdownToAnsi } from "../markdown/render";
 import TextInput from "ink-text-input";
-import { AgentRunner } from "@/agent/core";
+import { AgentRunner } from "../agent/core";
 
 type Message = { role: string; content: string; rendered?: string };
 

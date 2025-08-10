@@ -72,12 +72,12 @@ registerTool({
   execute: async (args) => {
     const { expression } = CalculatorArgs.parse(args);
     try {
-      // Very basic evaluation sandbox
-      // eslint-disable-next-line no-new-func
-      const val = Function(`"use strict"; return (${expression});`)();
-      return { summary: `evaluated ${expression}` , result: val };
+      // Use mathjs for safe evaluation
+      const { evaluate } = await import("mathjs");
+      const val = evaluate(expression);
+      return { summary: `evaluated ${expression}`, result: val };
     } catch (e) {
-      return { summary: `error evaluating ${expression}`, result: String(e) };
+      return { summary: `error evaluating ${expression}` , result: String(e) };
     }
   },
 });
