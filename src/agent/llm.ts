@@ -7,7 +7,7 @@ export class LLM {
   private temperature: number;
 
   constructor(opts?: { model?: string; temperature?: number }) {
-    this.client = new OpenAI({});
+    this.client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     this.model = opts?.model ?? "gpt-4o-mini";
     this.temperature = opts?.temperature ?? 0.2;
   }

@@ -4,15 +4,14 @@ let cachedWidth: number | undefined;
 export async function renderMarkdownToAnsi(markdown: string, width?: number): Promise<string> {
   if (!markdown) return "";
 
-  // Disable caching for now to debug
-  // if (cachedRenderer && cachedWidth === width) return cachedRenderer(markdown);
+  if (cachedRenderer && cachedWidth === width) return cachedRenderer(markdown);
 
   // Dynamically import to keep startup fast and avoid ESM/CJS issues
   const markedMod: any = await import("marked");
   const marked = markedMod.marked ?? markedMod.default ?? markedMod;
 
   const termMod: any = await import("marked-terminal");
-  const TerminalRenderer = termMod.default ?? termMod.MarkedTerminal ?? termMod;
+  const { markedTerminal } = termMod;
 
   // Import chalk for formatting
   const chalkMod: any = await import("chalk");
@@ -57,9 +56,11 @@ export async function renderMarkdownToAnsi(markdown: string, width?: number): Pr
     terminalOptions.highlight = highlightFn;
   }
 
-  // Configure marked with the terminal renderer - use setOptions as marked-terminal v7+ requires
-  marked.setOptions({ 
-    renderer: new TerminalRenderer(terminalOptions),
+  // Use marked-terminal extension with modern API
+  marked.use(markedTerminal(terminalOptions));
+  
+  // Configure marked options
+  marked.setOptions({
     breaks: false,
     gfm: true,
   });
