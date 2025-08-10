@@ -2,6 +2,7 @@ import { AgentRunner } from "./agent/core";
 import React from "react";
 import { render } from "ink";
 import App from "./tui/App.js";
+import { renderMarkdownToAnsi } from "./markdown/render.js";
 
 async function main() {
   const arg = process.argv.slice(2).join(" ");
@@ -11,7 +12,9 @@ async function main() {
   }
   const agent = new AgentRunner();
   const answer = await agent.run(arg);
-  console.log("\nFinal Answer:\n", answer);
+  const rendered = await renderMarkdownToAnsi(answer, process.stdout.columns ?? 80);
+  console.log("\nFinal Answer:\n");
+  console.log(rendered);
 }
 
 main().catch((err) => {

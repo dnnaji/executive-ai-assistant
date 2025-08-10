@@ -61,8 +61,37 @@ export class AgentRunner {
 
       const content = choice?.message?.content?.trim();
       if (content) return content;
+
+      // Heuristic fallback: if CLI backend didn't return tool calls or content,
+      // try to fulfill obvious calculator requests directly once.
+      if (step === 0 && TOOLS["calculator"]) {
+        const expr = extractMathExpression(userGoal);
+        if (expr) {
+          try {
+            const result = await TOOLS["calculator"].execute({ expression: expr });
+            const numeric = (result as any).result;
+            return typeof numeric !== "undefined"
+              ? `Computed ${expr} = ${numeric}`
+              : `Computation for ${expr}: ${(result as any).summary}`;
+          } catch { /* ignore and continue */ }
+        }
+      }
     }
 
     return "Stopped due to reaching step limit. Provide clearer instructions or enable more steps.";
   }
+}
+
+function extractMathExpression(input: string): string | null {
+  // Prefer content inside parentheses followed by ^2 or arithmetic
+  const computeMatch = input.match(/compute\s+([^\n]+?)(?:\s+using\s+calculator|$)/i);
+  let expr = computeMatch?.[1]?.trim();
+  if (!expr) {
+    const generic = input.match(/([0-9][0-9+\-*/().^\s]+[0-9)])/);
+    expr = generic?.[1]?.trim();
+  }
+  if (!expr) return null;
+  // Replace caret exponent with JS exponent operator
+  expr = expr.replace(/\^/g, "**");
+  return expr;
 }

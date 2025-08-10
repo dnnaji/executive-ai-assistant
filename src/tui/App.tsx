@@ -1,11 +1,14 @@
 import React, { useState, useMemo } from "react";
 import { Box, Text, useApp, useInput } from "ink";
+import { renderMarkdownToAnsi } from "@/markdown/render";
 import TextInput from "ink-text-input";
 import { AgentRunner } from "@/agent/core";
 
+type Message = { role: string; content: string; rendered?: string };
+
 export default function App() {
   const { exit } = useApp();
-  const [history, setHistory] = useState<{ role: string; content: string }[]>([]);
+  const [history, setHistory] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -23,7 +26,13 @@ export default function App() {
     setBusy(true);
     try {
       const answer = await agent.run(goal);
-      setHistory((h) => [...h, { role: "assistant", content: answer }]);
+      let rendered: string | undefined;
+      try {
+        rendered = await renderMarkdownToAnsi(answer, (process.stdout.columns ?? 80) - 4);
+      } catch {
+        rendered = undefined;
+      }
+      setHistory((h) => [...h, { role: "assistant", content: answer, rendered }]);
     } catch (e) {
       setHistory((h) => [...h, { role: "assistant", content: `Error: ${String(e)}` }]);
     } finally {
@@ -39,7 +48,13 @@ export default function App() {
             <Text color={m.role === "user" ? "cyan" : "green"}>
               {m.role === "user" ? "You" : "Agent"}:
             </Text>
-            <Text> {m.content}</Text>
+            <Box marginLeft={1}>
+              {m.role === "assistant" ? (
+                <Text>{m.rendered ?? m.content}</Text>
+              ) : (
+                <Text>{m.content}</Text>
+              )}
+            </Box>
           </Box>
         ))}
         {busy && (
