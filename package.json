@@ -1,0 +1,21 @@
+{
+  "name": "executive-ai-assistant-ts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/index.ts",
+    "dev": "bun --hot src/index.ts",
+    "check": "bun x tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "openai": "^4.57.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.24.6"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "bun-types": "^1.2.20",
+    "typescript": "^5.6.3"
+  }
+}
