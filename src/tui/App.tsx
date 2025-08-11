@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Box, Text, useApp, useInput } from "ink";
 import { renderMarkdownToAnsi } from "../markdown/render";
 import TextInput from "ink-text-input";
-import { AgentRunner } from "../agent/core";
+import { ChatAgent } from "../chat/agent";
 
 type Message = { role: string; content: string; rendered?: string };
 
@@ -12,7 +12,7 @@ export default function App() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const agent = useMemo(() => new AgentRunner(), []);
+  const agent = useMemo(() => new ChatAgent(), []);
 
   useInput((inputKey, key) => {
     if (key.escape) exit();
@@ -25,7 +25,7 @@ export default function App() {
     setInput("");
     setBusy(true);
     try {
-      const answer = await agent.run(goal);
+      const answer = await agent.chat(goal);
       let rendered: string | undefined;
       try {
         rendered = await renderMarkdownToAnsi(answer, (process.stdout.columns ?? 80) - 4);
