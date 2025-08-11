@@ -9,6 +9,7 @@ export class VercelProvider implements ChatProvider {
       model: openai("gpt-4o-mini"),
       messages: messages.map((m) => ({ role: m.role as any, content: m.content })),
     });
-    return await (result as any).text;
+    // In ai@5, streamText returns a StreamTextResult with a text Promise
+    return await result.text;
   }
 }

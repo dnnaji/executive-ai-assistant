@@ -2,7 +2,6 @@ import type { ChatMessage } from "./types";
 import type { ChatProvider } from "../providers/types";
 import { VercelProvider } from "../providers/vercel";
 import { CliProvider } from "../providers/cli";
-import { spawnSync } from "node:child_process";
 
 export class ChatAgent {
   private provider: ChatProvider;
@@ -51,6 +50,6 @@ export class ChatAgent {
 }
 
 function isAiCliAvailable(): boolean {
-  const res = spawnSync("which", ["ai"], { stdio: "ignore" });
-  return res.status === 0;
+  const path = Bun.which("ai");
+  return typeof path === "string" && path.length > 0;
 }

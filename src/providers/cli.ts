@@ -1,9 +1,6 @@
 import type { ChatProvider } from "./types";
 import type { ChatMessage } from "../chat/types";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
+// Use Bun-native process APIs
 
 export class CliProvider implements ChatProvider {
   constructor(private command: string = "ai") {}
@@ -12,7 +9,17 @@ export class CliProvider implements ChatProvider {
     const sys = messages.find((m) => m.role === "system")?.content ?? "";
     const user = [...messages].reverse().find((m) => m.role === "user")?.content ?? "";
     const prompt = `SYSTEM:\n${sys}\n\nUSER:\n${user}`;
-    const { stdout } = await execFileAsync(this.command, [prompt], { maxBuffer: 2_000_000 });
-    return stdout.trim();
+    const proc = Bun.spawn({
+      cmd: [this.command, prompt],
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    const exitCode = await proc.exited;
+    const stdoutText = await new Response(proc.stdout).text();
+    if (exitCode !== 0) {
+      const stderrText = await new Response(proc.stderr).text();
+      throw new Error(`CLI '${this.command}' failed with code ${exitCode}: ${stderrText}`);
+    }
+    return stdoutText.trim();
   }
 }

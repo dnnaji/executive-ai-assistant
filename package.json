@@ -7,7 +7,7 @@
     "start": "bun src/index.ts",
     "dev": "bun --hot src/index.ts",
     "check": "bun x tsc -p tsconfig.json --noEmit",
-    "build": "bun build src/index.ts --outdir dist",
+    "build": "bun build --target bun --external react-devtools-core src/index.ts --outdir dist",
     "test": "bun test"
   },
   "dependencies": {
