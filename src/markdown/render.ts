@@ -13,13 +13,12 @@ export async function renderMarkdownToAnsi(markdown: string, width?: number): Pr
   const termMod: any = await import("marked-terminal");
   const { markedTerminal } = termMod;
 
-  // Import chalk for formatting
+  // Import chalk v5 (ESM) for formatting and force color level for consistent styling
   const chalkMod: any = await import("chalk");
-  const chalk = chalkMod.default ?? chalkMod;
-  const { Chalk } = chalkMod;
-  
-  // Force chalk to use colors for terminal output
-  const chalkForced = new Chalk({ level: 2 });
+  const chalkAny = chalkMod.default ?? chalkMod;
+  const chalkForced = chalkMod?.Chalk
+    ? new chalkMod.Chalk({ level: 2 })
+    : (chalkAny?.Instance ? new chalkAny.Instance({ level: 2 }) : (() => { try { chalkAny.level = 2; } catch {} return chalkAny; })());
 
   // Set up syntax highlighting first
   let highlightFn: ((code: string, lang?: string) => string) | undefined;
