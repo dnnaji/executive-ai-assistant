@@ -14,7 +14,8 @@ export class VercelProvider implements ChatProvider {
           model: openai("gpt-4o-mini"),
           messages: messages.map((m) => ({ role: m.role as any, content: m.content })),
         });
-        return await result.text();
+        const text = await result.text;
+        return text;
       })(),
       (e) => createProviderError("vercel", `AI SDK error: ${String(e)}`, e)
     );
