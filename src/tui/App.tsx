@@ -24,20 +24,23 @@ export default function App() {
     setHistory((h) => [...h, { role: "user", content: goal }]);
     setInput("");
     setBusy(true);
-    try {
-      const answer = await agent.chat(goal);
-      let rendered: string | undefined;
-      try {
-        rendered = await renderMarkdownToAnsi(answer, (process.stdout.columns ?? 80) - 4);
-      } catch {
-        rendered = undefined;
+    const result = await agent.chat(goal);
+    await result.match(
+      async (answer: string) => {
+        let rendered: string | undefined;
+        try {
+          rendered = await renderMarkdownToAnsi(answer, (process.stdout.columns ?? 80) - 4);
+        } catch {
+          rendered = undefined;
+        }
+        setHistory((h) => [...h, { role: "assistant", content: answer, rendered }]);
+      },
+      (error) => {
+        const errorMessage = `Error (${error.kind}): ${error.message}`;
+        setHistory((h) => [...h, { role: "assistant", content: errorMessage }]);
       }
-      setHistory((h) => [...h, { role: "assistant", content: answer, rendered }]);
-    } catch (e) {
-      setHistory((h) => [...h, { role: "assistant", content: `Error: ${String(e)}` }]);
-    } finally {
-      setBusy(false);
-    }
+    );
+    setBusy(false);
   };
 
   return (

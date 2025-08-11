@@ -39,13 +39,13 @@ export class ChatAgent {
     throw new Error("No chat provider available. Install 'ai' CLI or set OPENAI_API_KEY.");
   }
 
-  async chat(message: string, history: ChatMessage[] = []): Promise<string> {
+  chat(message: string, history: ChatMessage[] = []) {
     const messages: ChatMessage[] = [
       { role: "system", content: "You are a helpful assistant." },
       ...history,
       { role: "user", content: message },
     ];
-    return await this.provider.chat(messages);
+    return this.provider.chat(messages);
   }
 }
 
