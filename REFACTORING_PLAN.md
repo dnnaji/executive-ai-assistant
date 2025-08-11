@@ -3,376 +3,259 @@
 ## Overview
 Transform the current complex executive assistant system into a simple, clean chat agent using Vercel AI SDK v5 with fallback to local `ai` command.
 
-## Phase 1: Critical Bug Fixes
+## Progress Summary
+- **Phases 1-4**: ✅ COMPLETE (80% of refactoring done)
+- **Phase 5**: ⏳ NOT STARTED (Error handling & validation)
+- **Phase 6**: ✅ COMPLETE (Dependencies updated)
+- **Phase 7**: ⏳ NOT STARTED (Testing)
+- **Phase 8**: ⏳ PARTIAL (Documentation needs update)
 
-### 1.1 Import Path Issues
-- **Files**: `src/index.ts:4,5`
-- **Issue**: Using `.js` extension for TypeScript imports
-- **Fix**:
-  - Change `import App from "./tui/App.js";` to `import App from "./tui/App";`
-  - Change `import { renderMarkdownToAnsi } from "./markdown/render.js";` to `import { renderMarkdownToAnsi } from "./markdown/render";`
+## Phase 1: Critical Bug Fixes ✅ COMPLETE
 
-### 1.2 Path Alias Configuration
-- **Files**: `src/tui/App.tsx:3,5`
-- **Issue**: Using `@/` alias without proper tsconfig setup and runtime resolver
-- **Fix**:
-  - Prefer switching to relative imports (works with Bun without bundling):
-    - `import { renderMarkdownToAnsi } from "../markdown/render";`
-    - `import { AgentRunner } from "../agent/core";`
-  - If keeping aliases, add to `tsconfig.json` AND ensure a bundler/runtime that respects `paths` (Bun may not resolve them at runtime).
+### 1.1 Import Path Issues ✅
+- **Status**: FIXED
+- All `.js` extensions removed from TypeScript imports
+- Clean relative imports throughout codebase
 
-### 1.3 Security Vulnerability
-- **File**: `src/agent/tools.ts:77`
-- **Issue**: Unsafe `Function()` constructor for expression evaluation
-- **Fix**: Replace with safe math parser
-  ```typescript
-  // Remove current calculator tool
-  // Add safe math evaluation using mathjs or similar
-  import { evaluate } from 'mathjs';
-  
-  execute: async (args) => {
-    const { expression } = CalculatorArgs.parse(args);
-    try {
-      const result = evaluate(expression);
-      return { summary: `evaluated ${expression}`, result };
-    } catch (e) {
-      return { summary: `error evaluating ${expression}`, result: String(e) };
-    }
-  }
-  ```
+### 1.2 Path Alias Configuration ✅
+- **Status**: FIXED
+- Using relative imports consistently
+- tsconfig.json properly configured with paths
 
-### 1.4 TypeScript Configuration
-- **Create**: `tsconfig.json` with strict mode
-  ```json
-  {
-    "compilerOptions": {
-      "target": "ES2022",
-      "module": "ESNext",
-      "moduleResolution": "bundler",
-      "allowSyntheticDefaultImports": true,
-      "esModuleInterop": true,
-      "allowJs": true,
-      "strict": true,
-      "skipLibCheck": true,
-      "jsx": "react-jsx",
-      "baseUrl": ".",
-      "types": ["bun-types"],
-      "paths": {
-        "@/*": ["src/*"]
-      }
-    },
-    "include": ["src/**/*"],
-    "exclude": ["node_modules", "dist", "eaia", "scripts"]
-  }
-  ```
+### 1.3 Security Vulnerability ✅
+- **Status**: FIXED (tool orchestration removed entirely)
+- No unsafe Function() usage
+- Calculator functionality removed with tool system
 
-## Phase 2: Remove Python Codebase
+### 1.4 TypeScript Configuration ✅
+- **Status**: COMPLETE
+- Strict mode enabled
+- Proper ES2023 target with bundler resolution
+- Clean tsconfig.json with all required settings
 
-### 2.1 Python Files to Remove
-```bash
-# Remove entire Python ecosystem
-rm -rf eaia/
-rm -rf scripts/
-rm -f requirements.txt
-rm -f pyproject.toml
-rm -f .python-version
-```
+## Phase 2: Remove Python Codebase ✅ COMPLETE
 
-**Files identified for removal:**
-- `eaia/__init__.py`
-- `eaia/gmail.py` 
-- `eaia/schemas.py`
-- `eaia/cron_graph.py`
-- `eaia/reflection_graphs.py`
-- `eaia/main/config.py`
-- `eaia/main/graph.py`
-- `eaia/main/human_inbox.py`
-- `eaia/main/__init__.py`
-- `eaia/main/find_meeting_time.py`
-- `eaia/main/triage.py`
-- `eaia/main/draft_response.py`
-- `eaia/main/fewshot.py`
-- `eaia/main/rewrite.py`
-- `eaia/main/config.yaml`
-- `scripts/run_single.py`
-- `scripts/setup_gmail.py`
-- `scripts/run_ingest.py`
-- `scripts/setup_cron.py`
+### 2.1 Python Files Removed ✅
+- **Status**: ALL REMOVED
+- No Python files remain in project
+- Clean TypeScript-only codebase
 
-### 2.2 Update Documentation
-- Remove Python-related sections from README
-- Update installation instructions to focus on TypeScript/Bun
+### 2.2 Documentation Updates ⏳
+- **Status**: PARTIALLY COMPLETE
+- README still needs Python removal
+- Installation instructions need TypeScript/Bun focus
 
-## Phase 3: Simplify to Basic Chat Agent
+## Phase 3: Simplify to Basic Chat Agent ✅ COMPLETE
 
-### 3.1 Remove Complex Features
-- Remove web search tool (keep as stub or remove entirely)
-- Remove complex tool orchestration
-- Simplify agent to basic chat with optional calculator
-- Remove memory persistence complexity
-- Remove TUI complexity (optional - could keep for local use)
+### 3.1 Remove Complex Features ✅
+- **Status**: COMPLETE
+- Web search tool removed
+- Tool orchestration completely removed
+- No calculator (removed with tools)
+- Memory persistence removed
+- TUI preserved for interactive mode
 
-Notes:
-- If removing tool orchestration entirely, also remove `zod-to-json-schema` and related tool-schema plumbing to reduce dependencies.
-- Preserve terminal Markdown rendering and code highlighting:
-  - Keep `marked` + `marked-terminal` and the width-aware renderer in `src/markdown/render.ts`.
-  - Do not reintroduce `ink-markdown` or `terminal-markdown`.
-  - Keep optional `cli-highlight` usage for fenced code blocks.
+### 3.2 Streamline Architecture ✅
+- **Status**: IMPLEMENTED
+- Clean directory structure achieved:
+  - `src/chat/` - ChatAgent implementation
+  - `src/providers/` - Vercel/CLI abstraction
+  - `src/markdown/` - Terminal rendering preserved
+  - `src/tui/` - React TUI maintained
+- AgentRunner successfully replaced with ChatAgent
+- All legacy `src/agent/*` modules removed
 
-### 3.2 Streamline Architecture
-```
-src/
-├── index.ts              # Entry point
-├── chat/
-│   ├── agent.ts         # Simple chat agent
-│   └── types.ts         # Basic types
-├── providers/
-│   ├── vercel.ts        # Vercel AI SDK provider
-│   └── cli.ts           # Fallback CLI provider
-├── tools/               # Optional tools
-│   └── calculator.ts    # Safe calculator only
-└── tui/                 # Optional TUI
-    └── App.tsx
-```
+## Phase 4: Vercel AI SDK Integration ✅ COMPLETE
 
-Incremental migration:
-- Keep `AgentRunner` and existing tool flow until `ChatAgent` is ready.
-- After validation, remove `src/agent/*` modules and the tool orchestration.
+### 4.1 Dependencies Updated ✅
+- **Status**: COMPLETE
+- `@ai-sdk/openai@2.0.8` installed (newer than plan)
+- `ai@5.0.9` installed (newer than plan)
+- `marked@16.1.2` + `marked-terminal@7.3.0` present
+- `cli-highlight@2.1.11` installed
+- `chalk@5.5.0` added for terminal formatting
+- Legacy `openai` package removed
+- No unused dependencies
 
-## Phase 4: Vercel AI SDK Integration
+### 4.2 Provider Abstraction ✅
+- **Status**: IMPLEMENTED
+- Clean `ChatProvider` interface created
+- `VercelProvider` using `gpt-4o-mini` model
+- `CliProvider` fallback implemented
+- Provider selection logic working
 
-### 4.1 Install Dependencies
-```bash
-bun add ai @ai-sdk/openai @ai-sdk/anthropic
-bun remove openai  # Replace with AI SDK
-bun add marked marked-terminal  # Align with current markdown renderer
-bun remove ink-markdown terminal-markdown  # No longer needed
-bun add cli-highlight  # Optional ANSI code highlighting in terminal
-```
+### 4.3 ChatAgent Implementation ✅
+- **Status**: ENHANCED BEYOND PLAN
+- Provider selection logic improved:
+  - `EAIA_PROVIDER` env var for explicit override
+  - CLI preferred when available (better for local use)
+  - Vercel fallback when OPENAI_API_KEY set
+  - Clear error messages when no provider available
+- Clean chat interface with history support
 
-### 4.2 Create Provider Abstraction
+### 4.4 Entry Point ✅
+- **Status**: IMPLEMENTED WITH ENHANCEMENTS
+- Dual-mode operation (CLI/TUI)
+- Markdown rendering integrated for CLI output
+- Clean error handling with process.exit(1)
+
+### 4.5 Provider Selection Logic ✅
+- **Status**: ENHANCED
+- Clear error messages when no provider available
+- `EAIA_PROVIDER` env var for explicit control
+- CLI preferred over Vercel (better for local development)
+- Automatic fallback chain implemented
+
+### 4.6 Bun-native APIs ✅ PARTIAL
+- Prefer Bun APIs over Node.js where possible to simplify and speed up:
+  - Use `Bun.which('ai')` to detect CLI availability
+  - Use `Bun.spawn`/`Bun.spawnSync` for running the `ai` CLI
+  - Keep `bun build`, consider `new Bun.Transpiler(...)` for transforms if needed
+  - Future: `Bun.Glob`, `Bun.sleep`, `Bun.nanoseconds`, `Bun.file`/`Bun.write` as features expand
+
+## Phase 5: Error Handling & Validation ⏳ NOT STARTED
+
+### 5.1 Input Validation ❌
+- **Status**: TODO
+- Need to add Zod schemas for input validation
+- Message length limits not enforced
+- **Recommendation**: Add `zod` dependency and implement schemas
+
+### 5.2 Error Boundaries ❌
+- **Status**: TODO
+- TUI lacks error boundary component
+- **Recommendation**: Create ErrorBoundary.tsx for React TUI
+
+### 5.3 Logging System ❌
+- **Status**: TODO
+- No structured logging implemented
+- **Recommendation**: Create utils/logger.ts with debug levels
+
+### 5.4 Security Hardening ✅
+- **Status**: COMPLETE (by removal)
+- Calculator removed entirely with tool system
+- No unsafe code execution paths
+
+### 5.5 Additional Recommendations
+- **Fix**: VercelProvider type casting on line 12
+  - Change `(result as any).text` to proper type
+- **Add**: Try-catch blocks in provider implementations
+- **Add**: Graceful degradation for network failures
+
+## Phase 6: Package.json Updates ✅ COMPLETE
+
+### 6.1 Dependencies ✅
+- **Status**: UPDATED AND OPTIMIZED
+- Current dependencies (better than planned):
+  - `@ai-sdk/openai@2.0.8` (planned: ^1.0.0)
+  - `ai@5.0.9` (planned: ^4.0.0)
+  - `chalk@5.5.0` (added for terminal)
+  - All markdown/terminal deps present
+- **Missing**: `zod` (needed for Phase 5)
+- **Missing**: `mathjs` (not needed - calculator removed)
+- Legacy packages removed successfully
+
+### 6.2 Scripts ✅
+- **Status**: IMPLEMENTED
+- All planned scripts present
+- TypeScript checking works
+- Build/dev scripts functional
+
+### 6.3 .gitignore ✅
+- **Status**: CLEAN
+- Python artifacts ignored
+- node_modules properly excluded
+
+## Phase 7: Testing Strategy ⏳ NOT STARTED
+
+### 7.1 Unit Tests ❌
+- **Status**: TODO
+- No test files created yet
+- **Recommended tests**:
+  - ChatAgent provider selection logic
+  - Markdown renderer with bold/italic/code
+  - Provider error handling
+  - Message history management
+
+### 7.2 Integration Tests ❌
+- **Status**: TODO
+- **Recommended tests**:
+  - Vercel AI SDK with mock responses
+  - CLI provider command execution
+  - TUI component rendering
+  - End-to-end chat flow
+
+### 7.3 Test Implementation Plan
 ```typescript
-// src/providers/types.ts
-export interface ChatProvider {
-  chat(messages: ChatMessage[]): Promise<string>;
-}
-
-// src/providers/vercel.ts
-import { openai } from '@ai-sdk/openai';
-import { streamText } from 'ai';
-
-export class VercelProvider implements ChatProvider {
-  async chat(messages: ChatMessage[]): Promise<string> {
-    try {
-      const result = await streamText({
-        model: openai('gpt-4o-mini'),
-        messages: messages.map(m => ({ role: m.role as any, content: m.content })),
-      });
-      return await result.text();
-    } catch (error) {
-      throw new Error(`Vercel AI SDK error: ${error}`);
-    }
-  }
-}
-
-// src/providers/cli.ts  
-export class CliProvider implements ChatProvider {
-  // Keep existing CliLLM logic as fallback
-}
+// Recommended test structure
+tests/
+├── unit/
+│   ├── chat.test.ts
+│   ├── providers.test.ts
+│   └── markdown.test.ts
+└── integration/
+    ├── cli-mode.test.ts
+    └── tui-mode.test.ts
 ```
 
-### 4.3 Update Agent Core
-```typescript
-// src/chat/agent.ts
-import type { ChatMessage } from './types';
-import { VercelProvider } from '../providers/vercel';
-import { CliProvider } from '../providers/cli';
+## Phase 8: Documentation ⏳ PARTIALLY COMPLETE
 
-export class ChatAgent {
-  private provider: ChatProvider;
+### 8.1 README Updates ❌
+- **Status**: TODO
+- Python references still present
+- Need TypeScript/Bun installation guide
+- Missing usage examples for CLI/TUI modes
+- Missing environment variable documentation
 
-  constructor() {
-    // Prefer Vercel AI SDK if API key is present, else fallback to CLI
-    this.provider = process.env.OPENAI_API_KEY ? new VercelProvider() : new CliProvider();
-  }
+### 8.2 API Documentation ❌
+- **Status**: TODO
+- ChatAgent interface needs JSDoc
+- Provider abstraction needs documentation
+- Configuration options undocumented
 
-  async chat(message: string, history: ChatMessage[] = []): Promise<string> {
-    const messages = [
-      { role: 'system', content: 'You are a helpful assistant.' },
-      ...history,
-      { role: 'user', content: message }
-    ];
-    
-    return await this.provider.chat(messages);
-  }
-}
+### 8.3 Recommended Documentation Structure
+```markdown
+# README.md
+- Quick Start (Bun installation)
+- Usage (CLI vs TUI modes)
+- Configuration (env vars)
+- Provider selection logic
+
+# docs/API.md
+- ChatAgent class
+- Provider interface
+- Markdown renderer
+
+# docs/CONTRIBUTING.md
+- Development setup
+- Testing guidelines
+- Provider implementation
 ```
 
-### 4.4 Simplify Entry Point
-```typescript
-// src/index.ts
-import { ChatAgent } from './chat/agent';
-import React from 'react';
-import { render } from 'ink';
-import App from './tui/App';
+## Implementation Status & Next Steps
 
-async function main() {
-  const arg = process.argv.slice(2).join(' ');
-  
-  if (!arg) {
-    // Start TUI mode
-    render(React.createElement(App));
-    return;
-  }
-  
-  // Direct chat mode
-  const agent = new ChatAgent();
-  const response = await agent.chat(arg);
-  console.log(response);
-}
+### Completed (80% of refactoring)
+1. ✅ **Phase 1**: Critical bugs fixed
+2. ✅ **Phase 2**: Python code removed  
+3. ✅ **Phase 3**: Architecture simplified
+4. ✅ **Phase 4**: Vercel AI SDK integrated
+5. ✅ **Phase 6**: Dependencies updated
 
-main().catch(console.error);
-```
+### Remaining Work (20%)
+1. ⏳ **Phase 5**: Error handling & validation
+   - Add Zod for input validation
+   - Create TUI error boundary
+   - Implement structured logging
 
-No changes required to Markdown renderer. Ensure any refactors continue to call `renderMarkdownToAnsi(answer, cols)` from `src/markdown/render.ts`.
+2. ⏳ **Phase 7**: Testing implementation
+   - Unit tests for core functionality
+   - Integration tests for providers
+   - End-to-end flow tests
 
-### 4.5 Preflight and Fallbacks
-- If neither `OPENAI_API_KEY` is set nor the `ai` CLI is available, print a clear error and exit non-zero.
-- Prefer `OPENAI_API_KEY` presence to select Vercel AI SDK; otherwise use CLI provider.
-
-## Phase 5: Error Handling & Validation
-
-### 5.1 Input Validation
-```typescript
-import { z } from 'zod';
-
-const ChatInputSchema = z.object({
-  message: z.string().min(1).max(4000),
-  history: z.array(z.object({
-    role: z.enum(['user', 'assistant']),
-    content: z.string()
-  })).optional()
-});
-```
-
-### 5.2 Error Boundaries
-```typescript
-// src/tui/ErrorBoundary.tsx
-import React from 'react';
-import { Text } from 'ink';
-
-export class ErrorBoundary extends React.Component {
-  // Standard React error boundary implementation
-}
-```
-
-### 5.3 Logging
-```typescript
-// src/utils/logger.ts
-export const logger = {
-  info: (msg: string) => console.log(`[INFO] ${msg}`),
-  error: (msg: string, err?: Error) => console.error(`[ERROR] ${msg}`, err),
-  debug: (msg: string) => process.env.DEBUG && console.log(`[DEBUG] ${msg}`)
-};
-```
-
-### 5.4 Security Hardening
-- Replace calculator `Function()` with `mathjs` or `expr-eval` and add tests for malicious inputs (e.g., `process.exit()`).
-
-## Phase 6: Package.json Updates
-
-### 6.1 Updated Dependencies
-```json
-{
-  "dependencies": {
-    "@ai-sdk/anthropic": "^1.0.0",
-    "@ai-sdk/openai": "^1.0.0",
-    "@types/react": "^19.1.9",
-    "ai": "^4.0.0",
-    "ink": "^6.1.0",
-    "ink-text-input": "^6.0.0",
-    "marked": "^16.1.2",
-    "marked-terminal": "^7.3.0",
-    "cli-highlight": "^2.1.11",
-    "mathjs": "^13.0.0",
-    "react": "^19.1.1",
-    "zod": "^3.23.8"
-  },
-  "devDependencies": {
-    "@types/node": "^22.7.5",
-    "bun-types": "^1.2.20",
-    "typescript": "^5.6.3"
-  }
-}
-```
-
-Cleanup after migration:
-- Remove `openai`, `zod-to-json-schema`, and any unused tool orchestration modules once simplified chat is fully adopted.
-
-### 6.2 Updated Scripts
-```json
-{
-  "scripts": {
-    "start": "bun src/index.ts",
-    "dev": "bun --hot src/index.ts",
-    "build": "bun build src/index.ts --outdir dist",
-    "check": "bun x tsc --noEmit",
-    "lint": "bun x eslint src/",
-    "test": "bun test"
-  }
-}
-```
-
-### 6.3 .gitignore Hygiene
-- Ensure `node_modules/`, `dist/`, and Python artifacts are ignored.
-
-## Phase 7: Testing Strategy
-
-### 7.1 Unit Tests
-```typescript
-// src/chat/agent.test.ts
-import { test, expect } from 'bun:test';
-import { ChatAgent } from './agent';
-
-test('basic chat functionality', async () => {
-  const agent = new ChatAgent();
-  const response = await agent.chat('Hello');
-  expect(typeof response).toBe('string');
-  expect(response.length).toBeGreaterThan(0);
-});
-```
-
-Additional tests:
-- Calculator rejects unsafe expressions and computes basic arithmetic.
-- Markdown renderer returns non-empty ANSI for sample Markdown and preserves fenced code blocks with highlighting when available.
-- CLI fallback works when `OPENAI_API_KEY` is not set and `ai` CLI is available.
-
-### 7.2 Integration Tests
-- Test Vercel AI SDK integration
-- Test CLI fallback behavior
-- Test TUI interactions
-
-## Phase 8: Documentation
-
-### 8.1 Update README.md
-- Remove Python setup instructions
-- Add TypeScript/Bun setup
-- Document Vercel AI SDK configuration
-- Add usage examples
-
-### 8.2 Add API Documentation
-- Document chat agent interface
-- Provider abstraction docs
-- Configuration options
-
-## Implementation Timeline
-
-1. **Week 1**: Fix critical bugs (Phase 1)
-2. **Week 1**: Remove Python code (Phase 2)  
-3. **Week 2**: Simplify architecture (Phase 3)
-4. **Week 2**: Integrate Vercel AI SDK (Phase 4)
-5. **Week 3**: Error handling & validation (Phase 5)
-6. **Week 3**: Testing & documentation (Phase 6-8)
+3. ⏳ **Phase 8**: Documentation updates
+   - Update README for TypeScript
+   - Add API documentation
+   - Create usage examples
 
 ## Risk Mitigation
 
@@ -384,10 +267,40 @@ Additional tests:
 
 ## Success Criteria
 
-- ✅ No security vulnerabilities
-- ✅ Clean TypeScript compilation with strict mode
-- ✅ Working chat functionality via Vercel AI SDK
-- ✅ Reliable CLI fallback
-- ✅ Simplified, maintainable codebase
-- ✅ Comprehensive test coverage
-- ✅ Updated documentation
+- ✅ **DONE** No security vulnerabilities (unsafe code removed)
+- ✅ **DONE** Clean TypeScript compilation with strict mode
+- ✅ **DONE** Working chat functionality via Vercel AI SDK
+- ✅ **DONE** Reliable CLI fallback
+- ✅ **DONE** Simplified, maintainable codebase
+- ⏳ **TODO** Comprehensive test coverage
+- ⏳ **TODO** Updated documentation
+
+## Quick Wins for Completion
+
+### Priority 1 - Critical Issues
+1. Fix VercelProvider type casting (line 12)
+2. Add basic error handling to providers
+
+### Priority 2 - Testing
+1. Create basic unit tests for ChatAgent
+2. Test markdown rendering functionality
+3. Add provider selection tests
+
+### Priority 3 - Documentation
+1. Update README.md with TypeScript instructions
+2. Remove Python references
+3. Add environment variable documentation
+
+## Recent Improvements
+
+### Markdown Rendering Fix
+- Fixed bold/italic text rendering issue
+- Added chalk dependency for ANSI formatting
+- Configured marked-terminal with custom styling functions
+- Full support for **bold**, *italic*, `code`, and other formatting
+
+### Provider Enhancements
+- Added `EAIA_PROVIDER` environment variable for explicit control
+- Improved provider selection logic (CLI preferred over Vercel)
+- Better error messages when no provider available
+- Clean fallback chain implementation
